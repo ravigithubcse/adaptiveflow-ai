@@ -32,5 +32,9 @@
     "@angular/compiler-cli": "^17.3.0",
     "@types/sockjs-client": "^1.5.4",
     "typescript": "~5.4.0"
+  },
+  "engines": {
+    "node": "20.x",
+    "npm": ">=9"
   }
 }
