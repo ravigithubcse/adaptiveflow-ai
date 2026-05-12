@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: adaptiveflow-ai-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: default
+      - key: OPENAI_API_KEY
+        value: your-openai-api-key-here
+
+  - type: web
+    name: adaptiveflow-ai-frontend
+    runtime: static
+    buildCommand: npm install && npm run build -- --configuration production
+    staticPublishPath: dist/adaptiveflow-ai/browser
+    rootDir: frontend
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -3,6 +3,7 @@ import { Subject, Observable } from 'rxjs';
 import { Client, IMessage } from '@stomp/stompjs';
 import * as SockJS from 'sockjs-client';
 import { RealTimeUpdate } from '../models/models';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class WebSocketService {
@@ -14,7 +15,7 @@ export class WebSocketService {
   public updates$: Observable<RealTimeUpdate> = this.updateSubject.asObservable();
 
   connect(): void {
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS(environment.wsUrl);
     this.client = new Client({
       webSocketFactory: () => socket as any,
       reconnectDelay: 5000,

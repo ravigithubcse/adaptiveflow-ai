@@ -5,10 +5,11 @@ import {
   DashboardSummary, BusinessEvent, Anomaly, Prediction,
   AutonomousAction, CopilotMessage
 } from '../models/models';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private baseUrl = 'http://localhost:8080/api';
+  private baseUrl = `${environment.apiUrl}/api`;
 
   constructor(private http: HttpClient) {}
 
@@ -52,3 +53,7 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/simulation/init`, {});
   }
 }
+
+  resolveAnomaly(id: string, body: { resolution: string, resolvedBy: string }) {
+    return this.http.post(`${this.baseUrl}/anomalies/${id}/resolve`, body);
+  }
