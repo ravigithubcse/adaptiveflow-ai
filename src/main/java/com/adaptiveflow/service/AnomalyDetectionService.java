@@ -33,20 +33,29 @@ public class AnomalyDetectionService {
     public void analyzeEvent(BusinessEvent event) {
         Optional<ProcessPattern> patternOpt = patternRepository.findByProcessType(event.getProcessType());
         if (patternOpt.isEmpty()) return;
-        
+
         ProcessPattern pattern = patternOpt.get();
         AnomalyDetectionResultDTO result = aiService.detectAnomalyWithAI(event, pattern);
-        
+
         if (result.isAnomaly()) {
+            double expectedValue = result.getContributingFactors() != null
+                    && result.getContributingFactors().containsKey("mean")
+                    ? result.getContributingFactors().get("mean")
+                    : pattern.getAvgDurationMs();
+            double actualValue = (double) event.getDurationMs();
+            double deviationPercent = expectedValue != 0
+                    ? (actualValue - expectedValue) / expectedValue * 100
+                    : 0.0;
+
             Anomaly anomaly = Anomaly.builder()
                     .id(UUID.randomUUID())
                     .processType(event.getProcessType())
                     .anomalyType(result.getAnomalyType())
                     .severity(result.getSeverity())
                     .anomalyScore(result.getAnomalyScore())
-                    .expectedValue(result.getContributingFactors().get("mean"))
-                    .actualValue((double) event.getDurationMs())
-                    .deviationPercent((result.getActualValue() - result.getExpectedValue()) / result.getExpectedValue() * 100)
+                    .expectedValue(expectedValue)
+                    .actualValue(actualValue)
+                    .deviationPercent(deviationPercent)
                     .description(result.getDescription())
                     .aiExplanation(result.getAiExplanation())
                     .suggestedAction(result.getSuggestedAction())
@@ -54,29 +63,29 @@ public class AnomalyDetectionService {
                     .relatedEntityId(event.getEntityId())
                     .correlationGroup("GRP-" + System.currentTimeMillis())
                     .build();
-            
+
             Anomaly saved = anomalyRepository.save(anomaly);
             messagingService.broadcastUpdate("anomalies", "NEW_ANOMALY", saved);
-            
+
             actionService.createActionFromAnomaly(saved);
-            
+
             checkCrossProcessCorrelation(anomaly);
         }
     }
-    
+
     private void checkCrossProcessCorrelation(Anomaly anomaly) {
         LocalDateTime window = LocalDateTime.now().minusMinutes(5);
         List<Anomaly> recentAnomalies = anomalyRepository.findRecentAnomalies(window);
-        
+
         long correlated = recentAnomalies.stream()
                 .filter(a -> !a.getProcessType().equals(anomaly.getProcessType()))
                 .filter(a -> a.getSeverity().equals("HIGH") || a.getSeverity().equals("CRITICAL"))
                 .count();
-        
+
         if (correlated >= 2) {
             String crossProcessAlert = "CROSS_PROCESS_ALERT: " + correlated + " other high-severity anomalies detected in last 5 minutes. " +
                     "Processes may be interdependent. Recommended: immediate system-wide review.";
-            
+
             Anomaly crossAnomaly = Anomaly.builder()
                     .id(UUID.randomUUID())
                     .processType("SYSTEM_WIDE")
@@ -91,20 +100,20 @@ public class AnomalyDetectionService {
                     .status("OPEN")
                     .correlationGroup(anomaly.getCorrelationGroup())
                     .build();
-            
+
             Anomaly saved = anomalyRepository.save(crossAnomaly);
             messagingService.broadcastUpdate("anomalies", "CROSS_PROCESS_ALERT", saved);
         }
     }
-    
+
     public List<Anomaly> getActiveAnomalies() {
         return anomalyRepository.findByStatusOrderByDetectedAtDesc("OPEN");
     }
-    
+
     public List<Anomaly> getAnomaliesByProcess(String processType) {
         return anomalyRepository.findByProcessTypeOrderByDetectedAtDesc(processType);
     }
-    
+
     @Transactional
     public Anomaly resolveAnomaly(UUID anomalyId, String resolution, String resolvedBy) {
         Optional<Anomaly> opt = anomalyRepository.findById(anomalyId);
