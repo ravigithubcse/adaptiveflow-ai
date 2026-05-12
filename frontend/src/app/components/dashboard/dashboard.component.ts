@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { WebSocketService } from '../../services/websocket.service';
 import { DashboardSummary, RealTimeUpdate } from '../../models/models';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard',
@@ -321,6 +322,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { label: 'AI Accuracy', value: '—%', trend: 0, icon: '' }
   ];
   private wsSub!: Subscription;
+  private pollSub!: Subscription;
   private processColors: Record<string, string> = {
     'SALES_ORDER': '#00d4ff',
     'INVENTORY_UPDATE': '#7c3aed',
@@ -338,10 +340,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.wsSub = this.ws.updates$.subscribe((update: RealTimeUpdate) => {
       this.handleRealTimeUpdate(update);
     });
+    // Poll every 8s so data stays fresh even if backend was sleeping on first load
+    this.pollSub = interval(8000).subscribe(() => this.loadDashboard());
   }
 
   ngOnDestroy() {
     this.wsSub?.unsubscribe();
+    this.pollSub?.unsubscribe();
     this.ws.disconnect();
   }
 
