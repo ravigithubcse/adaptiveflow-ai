@@ -312,7 +312,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { x1: 80, y1: 35, x2: 65, y2: 75, color: '#22c55e' }
   ];
   
-  kpis: any[] = [];
+  kpis: any[] = [
+    { label: 'Total Events', value: '—', trend: 0, icon: '' },
+    { label: 'Active Anomalies', value: '—', trend: 0, icon: '' },
+    { label: 'Predictions', value: '—', trend: 0, icon: '' },
+    { label: 'Pending Actions', value: '—', trend: 0, icon: '' },
+    { label: 'Process Health', value: '—%', trend: 0, icon: '' },
+    { label: 'AI Accuracy', value: '—%', trend: 0, icon: '' }
+  ];
   private wsSub!: Subscription;
   private processColors: Record<string, string> = {
     'SALES_ORDER': '#00d4ff',

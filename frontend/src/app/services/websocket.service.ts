@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { Client, IMessage } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { RealTimeUpdate } from '../models/models';
 import { environment } from '../../environments/environment';
 
@@ -15,33 +14,48 @@ export class WebSocketService {
   public updates$: Observable<RealTimeUpdate> = this.updateSubject.asObservable();
 
   connect(): void {
-    const socket = new SockJS(environment.wsUrl);
-    this.client = new Client({
-      webSocketFactory: () => socket as any,
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      onConnect: () => {
-        console.log('WebSocket connected');
-        this.reconnectAttempts = 0;
-        this.subscribeToTopics();
-      },
-      onStompError: (frame) => {
-        console.error('STOMP error', frame);
-      },
-      onWebSocketClose: () => {
-        console.warn('WebSocket closed');
-        this.reconnectAttempts++;
-        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          console.error('Max reconnect attempts reached');
+    try {
+      // Build broker URL: convert http(s) → ws(s), append /ws/websocket for SockJS-style fallback
+      const brokerURL = environment.wsUrl
+        .replace(/^https:\/\//, 'wss://')
+        .replace(/^http:\/\//, 'ws://');
+
+      this.client = new Client({
+        brokerURL,
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        onConnect: () => {
+          console.log('WebSocket connected');
+          this.reconnectAttempts = 0;
+          this.subscribeToTopics();
+        },
+        onStompError: (frame) => {
+          console.warn('STOMP error', frame);
+        },
+        onWebSocketError: (event) => {
+          console.warn('WebSocket error – real-time updates unavailable', event);
+        },
+        onWebSocketClose: () => {
+          this.reconnectAttempts++;
+          if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.warn('WebSocket: max reconnect attempts reached, giving up');
+          }
         }
-      }
-    });
-    this.client.activate();
+      });
+
+      this.client.activate();
+    } catch (err) {
+      console.warn('WebSocket init failed (non-fatal):', err);
+    }
   }
 
   disconnect(): void {
-    this.client?.deactivate();
+    try {
+      this.client?.deactivate();
+    } catch (err) {
+      // ignore
+    }
   }
 
   private subscribeToTopics(): void {
@@ -53,7 +67,7 @@ export class WebSocketService {
           const body = JSON.parse(message.body);
           this.updateSubject.next(body);
         } catch (e) {
-          console.error('Failed to parse message', e);
+          console.warn('Failed to parse WS message', e);
         }
       });
     });
