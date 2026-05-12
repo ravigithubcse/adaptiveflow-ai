@@ -52,8 +52,8 @@ export class ApiService {
   initSimulation() {
     return this.http.post(`${this.baseUrl}/simulation/init`, {});
   }
-}
 
   resolveAnomaly(id: string, body: { resolution: string, resolvedBy: string }) {
     return this.http.post(`${this.baseUrl}/anomalies/${id}/resolve`, body);
   }
+}
