@@ -23,168 +23,79 @@ AdaptiveFlow AI is a next-generation, AI-powered real-time business operations i
 
 ### 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Angular 17 Frontend                        │
-│  ┌──────────────┐ ┌─────────────┐ ┌─────────────────────┐  │
-│  │   Dashboard  │ │  Anomalies  │ │    AI Copilot       │  │
-│  │   (Real-time)│ │  (Explain)  │ │   (Natural Lang)    │  │
-│  └──────────────┘ └─────────────┘ └─────────────────────┘  │
-│  ┌──────────────┐ ┌─────────────┐ ┌─────────────────────┐  │
-│  │  Predictions │ │   Actions   │ │ Process Health      │  │
-│  │  (Forecast)  │ │ (Approval)  │ │   Monitor           │  │
-│  └──────────────┘ └─────────────┘ └─────────────────────┘  │
-└──────────────────────┬────────────────────────────────────────┘
-                     │ WebSocket STOMP + REST API
-┌──────────────────────▼────────────────────────────────────────┐
-│              Spring Boot 3.2 Backend                          │
-│  ┌──────────────┐ ┌─────────────┐ ┌─────────────────────┐  │
-│  │   Event      │ │   Anomaly   │ │  Predictive Engine  │  │
-│  │   Ingestion  │ │  Detection  │ │   (AI-Powered)      │  │
-│  └──────────────┘ └─────────────┘ └─────────────────────┘  │
-│  ┌──────────────┐ ┌─────────────┐ ┌─────────────────────┐  │
-│  │   AI Copilot │ │ Autonomous  │ │   Cross-Process     │  │
-│  │   Service    │ │   Action    │ │   Correlation       │  │
-│  │ (OpenAI/LLM) │ │   Engine    │ │   Engine            │  │
-│  └──────────────┘ └─────────────┘ └─────────────────────┘  │
-└──────────────────────┬────────────────────────────────────────┘
-                     │ JPA / Hibernate
-┌──────────────────────▼────────────────────────────────────────┐
-│              SQL Server / H2 Database                         │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────────────┐  │
-│  │  Events  │ │ Anomalies│ │Predictions│ │    Actions     │  │
-│  └──────────┘ └──────────┘ └──────────┘ └────────────────┘  │
-└───────────────────────────────────────────────────────────────┘
-```
+```mermaid
+flowchart TB
+    subgraph FE["🖥️ Angular 17 Frontend"]
+        direction LR
+        A1["📊 Dashboard
+(Real-time)"]
+        A2["🚨 Anomalies
+(Explain)"]
+        A3["🤖 AI Copilot
+(Chat)"]
+        A4["📈 Predictions"]
+        A5["⚡ Actions
+(Approval)"]
+        A6["💓 Process
+Health"]
+    end
 
-### 🔧 Tech Stack
+    subgraph GW["🔌 Communication Layer"]
+        G1["WebSocket STOMP"]
+        G2["REST API"]
+    end
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Angular 17, TypeScript, RxJS, WebSocket STOMP |
-| Backend | Spring Boot 3.2, Spring WebFlux, Spring Data JPA |
-| AI Engine | OpenAI GPT-4o-mini integration with local fallback |
-| Real-time | WebSocket STOMP, Server-Sent Events |
-| Database | SQL Server (production) / H2 (development) |
-| Build | Maven, Node.js |
+    subgraph BE["☕ Spring Boot 3.2 Backend"]
+        direction LR
+        B1["📥 Event
+Ingestion"]
+        B2["🔍 Anomaly
+Detection"]
+        B3["🔮 Predictive
+Engine"]
+        B4["💬 AI Copilot
+(OpenAI GPT-4o)"]
+        B5["⚙️ Autonomous
+Action Engine"]
+        B6["🔗 Cross-Process
+Correlation"]
+    end
 
-### 📋 Features
+    subgraph DB["🗄️ Data Layer"]
+        D1["🗃️ SQL Server /
+H2 Database"]
+        D2["📋 Events"]
+        D3["⚠️ Anomalies"]
+        D4["📊 Predictions"]
+        D5["✅ Actions"]
+    end
 
-#### 1. Real-Time Event Ingestion
-- Simulated business events across 6 process types
-- WebSocket streaming to frontend
-- Automatic pattern learning
+    FE <--> GW
+    GW <--> BE
+    BE <--> DB
+    D1 --- D2 & D3 & D4 & D5
 
-#### 2. AI-Powered Anomaly Detection
-- Statistical z-score analysis + AI reasoning
-- Cross-process correlation detection
-- Explainable AI explanations for every anomaly
-- Severity classification (CRITICAL/HIGH/MEDIUM)
-
-#### 3. Predictive Intelligence
-- Trend-based forecasting
-- 30-minute ahead predictions
-- Confidence scoring
-- Risk level assessment
-
-#### 4. AI Copilot (Natural Language)
-- Chat with your business data
-- Context-aware process filtering
-- AI-generated insights and recommendations
-- Session-based conversation history
-
-#### 5. Autonomous Action Engine
-- AI-generated corrective actions
-- Human-in-the-loop approval workflow
-- Auto-execution for CRITICAL severity
-- Impact tracking
-
-### 🚀 Getting Started
-
-#### Prerequisites
-- Java 17+
-- Node.js 18+
-- Maven 3.8+
-- SQL Server (optional, H2 included for demo)
-- OpenAI API key (optional, local AI fallback included)
-
-#### Backend Setup
-```bash
-cd adaptiveflow-ai
-mvn clean install
-mvn spring-boot:run
+    classDef fe fill:#1e3a5f,stroke:#4fc3f7,color:#e0f7fa,rx:8
+    classDef gw fill:#1a237e,stroke:#7986cb,color:#e8eaf6
+    classDef be fill:#1b5e20,stroke:#66bb6a,color:#e8f5e9,rx:8
+    classDef db fill:#3e2723,stroke:#ff8a65,color:#fbe9e7,rx:8
+    class A1,A2,A3,A4,A5,A6 fe
+    class G1,G2 gw
+    class B1,B2,B3,B4,B5,B6 be
+    class D1,D2,D3,D4,D5 db
 ```
 
-#### Frontend Setup
-```bash
-cd frontend
-npm install
-ng serve
-```
+**Request Flow:**
+1. Angular frontend connects via **WebSocket STOMP** for real-time streaming and **REST API** for CRUD operations
+2. **Event Ingestion** service ingests business events across 6 process types and feeds the pipeline
+3. **Anomaly Detection** applies z-score analysis + OpenAI GPT-4o reasoning for explainable alerts
+4. **Predictive Engine** forecasts failures 30 minutes ahead with confidence scoring
+5. **AI Copilot** translates natural language queries into process insights using OpenAI GPT-4o-mini
+6. **Autonomous Action Engine** generates corrective actions with human-in-the-loop approval
+7. **Cross-Process Correlation** detects hidden dependencies across business process types
+8. All state is persisted to **SQL Server** (prod) / **H2** (dev) via Spring Data JPA
 
-#### Access the Application
-- Frontend: http://localhost:4200
-- Backend API: http://localhost:8080/api
-- H2 Console: http://localhost:8080/h2-console
-
-### 🔑 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/dashboard/summary` | GET | Dashboard KPIs |
-| `/api/anomalies` | GET | Active anomalies |
-| `/api/predictions` | GET | Active predictions |
-| `/api/actions/pending` | GET | Pending actions |
-| `/api/actions/{id}/approve` | POST | Approve/reject action |
-| `/api/copilot/chat` | POST | AI copilot conversation |
-| `/ws` | WebSocket | Real-time updates |
-
-### 🧠 AI Integration
-
-The platform integrates with OpenAI's GPT-4o-mini for:
-- Natural language query understanding
-- Anomaly explanation generation
-- Predictive reasoning
-- Action recommendation
-
-**Local Fallback**: If no API key is configured, the system uses an intelligent local fallback engine that generates contextually appropriate responses based on process metrics and statistical analysis.
-
-### 📊 Demo Data
-
-The system automatically generates realistic business events for:
-- **SALES_ORDER** - Order creation and fulfillment
-- **INVENTORY_UPDATE** - Stock movements
-- **INVOICE_PROCESSING** - Billing and payments
-- **HR_APPROVAL** - Leave and expense requests
-- **CUSTOMER_SUPPORT** - Ticket management
-- **FINANCIAL_TRANSACTION** - Money transfers
-
-### 🔒 Production Configuration
-
-For production deployment with SQL Server:
-
-```properties
-spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=AdaptiveFlowDB;encrypt=true;trustServerCertificate=true
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
-```
-
-### 📈 Future Roadmap
-
-- [ ] Machine Learning model training pipeline
-- [ ] Custom process type configuration
-- [ ] Multi-tenant SaaS architecture
-- [ ] Advanced correlation graph visualization
-- [ ] Mobile application
-- [ ] Integration with SAP, Salesforce, Workday APIs
-- [ ] Real-time alert notifications (Slack, Teams, Email)
-
-### 📄 License
-
-MIT License - See LICENSE file for details.
-
+---
 ---
 
 **Created with ❤️ for the future of AI-powered business operations.**
